@@ -1,0 +1,33 @@
+{
+  "brand": "墨与代码",
+  "brandEn": "Ink & Code",
+  "tagline": "技术学习日记 · 项目 · 随笔",
+  "description": "一个用来存放技术学习日记、项目记录与随笔的个人站点。",
+  "author": "Your Name",
+  "email": "you@example.com",
+  "siteUrl": "https://example.com",
+  "startYear": 2024,
+  "photo": "",
+  "nav": [
+    { "label": "博客", "href": "blog/" },
+    { "label": "项目", "href": "projects/" },
+    { "label": "归档", "href": "archives/" },
+    { "label": "标签", "href": "tags/" },
+    { "label": "关于", "href": "about/" }
+  ],
+  "social": [
+    { "label": "GitHub", "icon": "github", "href": "https://github.com/yourname" },
+    { "label": "Email", "icon": "mail", "href": "mailto:you@example.com" },
+    { "label": "RSS", "icon": "rss", "href": "rss.xml" }
+  ],
+  "categories": ["技术笔记", "项目复盘", "随笔"],
+  "postsPerPage": 6,
+  "hero": {
+    "greeting": "你好，我是",
+    "title": "在这里记录我学的、做的、想的。",
+    "paragraphs": [
+      "白天写代码，晚上写字。这个站点是我的第二大脑：技术学习日记用来对抗遗忘，项目记录用来复盘取舍，随笔用来安放那些说不清楚的情绪。",
+      "写作不是为了展示，而是为了让三个月后的自己还能看懂今天在想什么。"
+    ]
+  }
+}

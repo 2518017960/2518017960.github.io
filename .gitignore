@@ -1,0 +1,15 @@
+# 构建产物
+dist/
+
+# Python
+__pycache__/
+*.pyc
+
+# 本地 agent 状态 / 编辑器
+.workbuddy/
+.vscode/
+.idea/
+
+# 系统
+.DS_Store
+Thumbs.db
