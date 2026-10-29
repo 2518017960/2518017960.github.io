@@ -12,31 +12,27 @@
     "desc": "跟着论文写的 Raft 实现，支持 leader 选举与日志复制。用来理解一致性协议到底难在哪里。",
     "tags": ["Go", "分布式", "学习项目"],
     "status": "进行中",
-    "featured": true,
-    "links": { "GitHub": "https://github.com/yourname/raft-toy" }
+    "featured": true
   },
   {
     "name": "clipnote",
     "desc": "命令行笔记工具：一条命令把想法追加到当天的 Markdown 日记里，支持全文检索和标签。",
     "tags": ["Rust", "CLI", "效率"],
     "status": "已上线",
-    "featured": true,
-    "links": { "GitHub": "https://github.com/yourname/clipnote", "文档": "#" }
+    "featured": true
   },
   {
     "name": "tiny-sql",
     "desc": "从零实现一个玩具数据库：B+ 树索引、简单的查询解析器和一个基于代价的优化器。",
     "tags": ["C++", "数据库"],
     "status": "进行中",
-    "featured": false,
-    "links": { "GitHub": "https://github.com/yourname/tiny-sql" }
+    "featured": false
   },
   {
     "name": "pomodoro-tui",
     "desc": "终端里的番茄钟，带统计面板。写它的唯一原因是现有工具都要打开浏览器。",
     "tags": ["Go", "TUI"],
     "status": "已上线",
-    "featured": false,
-    "links": { "GitHub": "https://github.com/yourname/pomodoro-tui" }
+    "featured": false
   }
 ]
