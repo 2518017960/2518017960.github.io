@@ -5,7 +5,7 @@
   "description": "一个用来存放技术学习日记、项目记录与随笔的个人站点。",
   "author": "Your Name",
   "email": "you@example.com",
-  "siteUrl": "https://example.com",
+  "siteUrl": "https://2518017960.github.io",
   "startYear": 2024,
   "photo": "",
   "nav": [
@@ -16,7 +16,7 @@
     { "label": "关于", "href": "about/" }
   ],
   "social": [
-    { "label": "GitHub", "icon": "github", "href": "https://github.com/yourname" },
+    { "label": "GitHub", "icon": "github", "href": "https://github.com/2518017960" },
     { "label": "Email", "icon": "mail", "href": "mailto:you@example.com" },
     { "label": "RSS", "icon": "rss", "href": "rss.xml" }
   ],
