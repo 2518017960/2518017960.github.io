@@ -421,6 +421,17 @@ def build_home(posts):
     paragraphs = "".join(f"<p>{esc(x)}</p>" for x in hero.get("paragraphs", []))
 
     proj_cards = "".join(project_card(pr, up) for pr in featured)
+    projects_section = (
+        f"""<section class="home-section">
+  <div class="section-head">
+    <h2>{icon('folder')}项目</h2>
+    <a href="projects/index.html">全部项目 →</a>
+  </div>
+  <div class="project-grid">{proj_cards}</div>
+</section>"""
+        if featured
+        else ""
+    )
 
     entries = [
         ("blog/index.html", "file", "博客",
@@ -471,13 +482,7 @@ def build_home(posts):
   {post_list(newer, up)}
 </section>
 
-<section class="home-section">
-  <div class="section-head">
-    <h2>{icon('folder')}项目</h2>
-    <a href="projects/index.html">全部项目 →</a>
-  </div>
-  <div class="project-grid">{proj_cards}</div>
-</section>"""
+{projects_section}"""
 
     page("index.html", "", body, desc=CFG.get("description", ""))
 
@@ -488,8 +493,13 @@ def category_pages(posts) -> list:
     return CATEGORIES or sorted({p["category"] for p in posts})
 
 
+def categories_with_posts(posts) -> list:
+    """只保留至少有 1 篇文章的分类，避免生成一堆空分类页和空筛选标签。"""
+    return [c for c in category_pages(posts) if any(p["category"] == c for p in posts)]
+
+
 def build_blog(posts, category=None):
-    cats = category_pages(posts)
+    cats = categories_with_posts(posts)
     if category:
         filtered = [p for p in posts if p["category"] == category]
         base_dir = f"blog/category/{category}/"
@@ -524,6 +534,15 @@ def build_blog(posts, category=None):
                 f'<a class="filter-tab" href="{up}blog/category/{c}/index.html" '
                 f'aria-current="{cur}">{esc(c)}</a>'
             )
+        # 没有任何分类时不显示只有一个「全部」的筛选条
+        tabs_block = f'<div class="filter-tabs">{tab_html}</div>' if cats else ""
+        list_status = (
+            f'<div class="list-status">'
+            f"<span>第 {page_no} 页 · 共 {len(filtered)} 篇{'' if end == 0 else f'（{start}–{end}）'}</span>"
+            f'<a href="{up}archives/index.html">按年份浏览 →</a></div>'
+            if filtered
+            else ""
+        )
 
         pager = []
         if pages > 1:
@@ -554,35 +573,39 @@ def build_blog(posts, category=None):
         if page_no > 1:
             trail.append((f"第 {page_no} 页", None))
 
-        body = f"""<div class="page-head">
-  {crumbs(up, trail)}
-  <h1 class="page-title">{esc(title)}</h1>
-</div>
-<div class="blog-layout">
-  <section id="content">
-    <div class="filter-tabs">{tab_html}</div>
-    <div class="list-status">
-      <span>第 {page_no} 页 · 共 {len(filtered)} 篇{'' if end == 0 else f'（{start}–{end}）'}</span>
-      <a href="{up}archives/index.html">按年份浏览 →</a>
-    </div>
-    {post_list(chunk, up)}
-    {f'<div class="pager">{"".join(pager)}</div>' if pager else ''}
-  </section>
-  <aside class="sidebar">
-    <div class="sidebar-block">
+        # 侧栏：没有标签/年份时整块不渲染，避免留下空壳
+        sidebar_blocks = []
+        if top_tags:
+            sidebar_blocks.append(f"""<div class="sidebar-block">
       <h2>{icon('tag')}标签</h2>
       <div class="tag-cloud">
         {''.join(f'<a class="chip" href="{up}tags/{tag_dir(t)}/index.html">{esc(t)}</a>' for t, _ in top_tags)}
       </div>
       <a class="sidebar__foot" href="{up}tags/index.html">查看全部 →</a>
-    </div>
-    <div class="sidebar-block">
+    </div>""")
+        recent_years = sorted({p["date"].year for p in posts}, reverse=True)[:6]
+        if recent_years:
+            sidebar_blocks.append(f"""<div class="sidebar-block">
       <h2>{icon('calendar')}归档</h2>
       <div class="tag-cloud">
-        {''.join(f'<a class="chip" href="{up}archives/index.html#{y}">{y}</a>' for y in sorted({p["date"].year for p in posts}, reverse=True)[:6])}
+        {''.join(f'<a class="chip" href="{up}archives/index.html#{y}">{y}</a>' for y in recent_years)}
       </div>
-    </div>
-  </aside>
+    </div>""")
+        sidebar_html = f'<aside class="sidebar">{"".join(sidebar_blocks)}</aside>' if sidebar_blocks else ""
+        layout_cls = "blog-layout" if sidebar_blocks else "blog-layout blog-layout--full"
+
+        body = f"""<div class="page-head">
+  {crumbs(up, trail)}
+  <h1 class="page-title">{esc(title)}</h1>
+</div>
+<div class="{layout_cls}">
+  <section id="content">
+    {tabs_block}
+    {list_status}
+    {post_list(chunk, up)}
+    {f'<div class="pager">{"".join(pager)}</div>' if pager else ''}
+  </section>
+  {sidebar_html}
 </div>"""
 
         page(out_rel, title if page_no == 1 else f"{title} · 第 {page_no} 页", body,
@@ -590,7 +613,7 @@ def build_blog(posts, category=None):
 
 
 def build_posts(posts):
-    cats = category_pages(posts)
+    cats = categories_with_posts(posts)
     for idx, p in enumerate(posts):
         out_rel = f"{p['url']}index.html"
         up = up_prefix(out_rel)
@@ -685,14 +708,22 @@ def build_archives(posts):
   <ul class="archive-list">{rows}</ul>
 </section>""")
 
+    if posts:
+        summary_line = (
+            f'<p class="muted" style="margin:-0.75rem 0 2.5rem;font-size:0.875rem">'
+            f'共 {len(posts)} 篇文章，{len(groups)} 个年份。按时间倒序排列。</p>'
+        )
+        archive_body = "".join(blocks)
+    else:
+        summary_line = ""
+        archive_body = '<div class="empty-state">还没有文章。写下的第一篇会出现在这里。</div>'
+
     body = f"""<div class="page-head">
   {crumbs(up, [("首页", "index.html"), ("归档", None)])}
   <h1 class="page-title">归档</h1>
 </div>
-<p class="muted" style="margin:-0.75rem 0 2.5rem;font-size:0.875rem">
-  共 {len(posts)} 篇文章，{len(groups)} 个年份。按时间倒序排列。
-</p>
-{''.join(blocks)}"""
+{summary_line}
+{archive_body}"""
 
     page("archives/index.html", "归档", body, active="archives",
          desc=f"{BRAND} 文章归档，按年份浏览。")
@@ -721,12 +752,22 @@ def build_tags(posts):
         for t, items in sorted(counts.items(), key=lambda x: (-len(x[1]), x[0]))
     )
     up = up_prefix("tags/index.html")
+    if counts:
+        count_line = (
+            f'<p class="muted" style="margin:-0.75rem 0 2rem;font-size:0.875rem">'
+            f"共 {len(counts)} 个标签</p>"
+        )
+        tag_body = f'<div class="tag-grid">{cards}</div>'
+    else:
+        count_line = ""
+        tag_body = '<div class="empty-state">还没有标签。文章里写 <code>tags</code> 就会自动汇总到这里。</div>'
+
     body = f"""<div class="page-head">
   {crumbs(up, [("首页", "index.html"), ("标签", None)])}
   <h1 class="page-title">标签</h1>
 </div>
-<p class="muted" style="margin:-0.75rem 0 2rem;font-size:0.875rem">共 {len(counts)} 个标签</p>
-<div class="tag-grid">{cards}</div>"""
+{count_line}
+{tag_body}"""
     page("tags/index.html", "标签", body, active="tags", desc=f"{BRAND} 的全部标签。")
 
 
@@ -764,15 +805,22 @@ def project_card(pr: dict, up: str) -> str:
 def build_projects():
     up = up_prefix("projects/index.html")
     projects = load_projects()
-    cards = "".join(project_card(pr, up) for pr in projects)
+    if projects:
+        intro = (
+            '<p class="muted" style="margin:-0.75rem 0 2rem;font-size:0.875rem;max-width:38rem;line-height:1.8">'
+            "做过的东西、正在做的东西，以及那些写完就再也没打开过的玩具。每一个都留有对设计取舍的复盘。</p>"
+        )
+        grid = f'<div class="project-grid">{"".join(project_card(pr, up) for pr in projects)}</div>'
+    else:
+        intro = ""
+        grid = '<div class="empty-state">还没有项目记录。</div>'
+
     body = f"""<div class="page-head">
   {crumbs(up, [("首页", "index.html"), ("项目", None)])}
   <h1 class="page-title">项目</h1>
 </div>
-<p class="muted" style="margin:-0.75rem 0 2rem;font-size:0.875rem;max-width:38rem;line-height:1.8">
-  做过的东西、正在做的东西，以及那些写完就再也没打开过的玩具。每一个都留有对设计取舍的复盘。
-</p>
-<div class="project-grid">{cards}</div>"""
+{intro}
+{grid}"""
     page("projects/index.html", "项目", body, active="projects",
          desc=f"{BRAND} 的项目列表。")
 
@@ -906,7 +954,7 @@ def main():
     posts = load_posts()
     build_home(posts)
     build_blog(posts)
-    for cat in category_pages(posts):
+    for cat in categories_with_posts(posts):
         build_blog(posts, category=cat)
     build_posts(posts)
     build_archives(posts)

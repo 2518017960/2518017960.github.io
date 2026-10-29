@@ -901,6 +901,11 @@ ol {
     grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
     align-items: start;
   }
+
+  /* 没有侧栏内容时让正文占满，不留一条空列 */
+  .blog-layout--full {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .list-status {
