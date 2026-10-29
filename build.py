@@ -969,7 +969,38 @@ def main():
 
     pages = sum(1 for _ in OUT.rglob("*.html"))
     print(f"✓ 构建完成：{len(posts)} 篇文章，{pages} 个页面 → {OUT}")
-    print("  预览：python -m http.server 8123 --directory dist")
+
+    port = parse_port()
+    if "--serve" in sys.argv:
+        serve(port)
+    else:
+        print(f"  预览：python build.py --serve   （或 python -m http.server {port} --directory dist）")
+
+
+def parse_port(default: int = 8123) -> int:
+    """支持 --port=8000 覆盖预览端口。"""
+    for arg in sys.argv[1:]:
+        if arg.startswith("--port="):
+            try:
+                return int(arg.split("=", 1)[1])
+            except ValueError:
+                pass
+    return default
+
+
+def serve(port: int) -> None:
+    """构建后启动本地预览，Ctrl+C 退出。"""
+    import functools
+    import http.server
+    import socketserver
+
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=str(OUT))
+    with socketserver.TCPServer(("127.0.0.1", port), handler) as httpd:
+        print(f"  预览：http://localhost:{port}  （Ctrl+C 停止）")
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\n  已停止。")
 
 
 if __name__ == "__main__":
